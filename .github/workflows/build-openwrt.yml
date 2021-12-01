@@ -58,7 +58,8 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        #git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 2 https://github.com/openwrt/openwrt.git -b openwrt-21.02 openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Load custom feeds
@@ -67,6 +68,11 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
+        rm -rf feeds/packages/net/smartdns
+        rm -rf feeds/luci/application/luci-app-smartdns
+        rm -rf feeds/kenzo/smartdns
+        rm -rf feeds/kenzo/luci-app-smartdns
+        git clone https://github.com/lisakhan/openwrt-smartdns feeds/kenzo/smartdns
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
