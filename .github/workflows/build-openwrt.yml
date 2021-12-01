@@ -115,8 +115,10 @@ jobs:
         echo -e "$(nproc) thread compile"
         #make -j$(nproc) || make -j1 || make -j1 V=s
         #make -j$(nproc) V=sc || make -j1 V=s || make -j1
-        make kenzo/luci-app-ssr-plus/compile -j1 V=s
-        make package/net/smartdns/compile -j1 V=s
+        #make package/luci-app-ssr-plus/compile -j1 V=s
+        #make package/smartdns/compile -j1 V=s
+        make tools/install -j$(nproc)
+        make toolchain/install -j$(nproc)
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
