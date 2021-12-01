@@ -68,15 +68,19 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-        rm -rf feeds/packages/net/smartdns
-        rm -rf feeds/luci/application/luci-app-smartdns
-        rm -rf feeds/kenzo/smartdns
-        rm -rf feeds/kenzo/luci-app-smartdns
-        git clone https://github.com/lisakhan/openwrt-smartdns feeds/kenzo/smartdns
 
     - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
+      run: |
+      cd openwrt
+      ./scripts/feeds update -a
+      rm -rf feeds/packages/net/smartdns
+      rm -rf feeds/luci/application/luci-app-smartdns
+      rm -rf feeds/kenzo/smartdns
+      rm -rf feeds/kenzo/luci-app-smartdns
+      git clone https://github.com/lisakhan/openwrt-smartdns feeds/packages/net/smartdns
+      ./scripts/feeds update package
+      ./scripts/feeds update kenzo
+        
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
