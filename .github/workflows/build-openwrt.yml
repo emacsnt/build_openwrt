@@ -51,7 +51,7 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir
+        sudo mkdir -p /workdir/upload
         sudo chown $USER:$GROUPS /workdir
 
     - name: Clone source code
@@ -116,11 +116,13 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-        mkdir /workdir/upload
-        cd /workdir/upload
-        tar czf pre-build.tar.gz /workdir/openwrt
-        split -b 1800m pre-build.tar.gz op.prebuild.tar.gz.
-        rm pre-build.tar.gz
+        
+        uses: thedoctor0/zip-release@master
+        with:
+        type: 'tar'
+        filename: 'upload/prebuild.tar.gz'
+        path: 'openwrt'
+        directory: '/workdir'
 
     - name: Check space usage
       if: (!cancelled())
@@ -138,6 +140,6 @@ jobs:
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_Prebuild${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: $GITHUB_WORKSPACE/upload
+        path: /workdir/upload
 
 
