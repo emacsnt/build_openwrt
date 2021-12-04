@@ -26,6 +26,7 @@ env:
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
+  PREPARE_SH: prepare_prebuild.sh
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: true
@@ -52,17 +53,36 @@ jobs:
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir/upload
-        sudo chown $USER:$GROUPS /workdir
-        sudo chown $USER:$GROUPS /workdir/upload
+        sudo chown -R $USER:$GROUPS /workdir
 
     - name: Clone source code
       working-directory: /workdir
       run: |
         df -hT $PWD
-        curl \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/emacsnt/build_openwrt/actions/artifacts/121703734/zip
+        chmod +x $PREPARE_SH
+        $GITHUB_WORKSPACE/$PREPARE_SH
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        #make -j$(nproc) || make -j1 || make -j1 V=s
+        #make -j$(nproc) V=sc || make -j1 V=s || make -j1
+        #make package/luci-app-ssr-plus/compile -j1 V=s
+        make package/smartdns/compile -j1 V=s
+        echo "::set-output name=status::success"
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Upload bin directory
+      uses: actions/upload-artifact@main
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
