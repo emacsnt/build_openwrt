@@ -59,7 +59,7 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        chmod +x $PREPARE_SH
+        chmod +x $GITHUB_WORKSPACE/$PREPARE_SH
         $GITHUB_WORKSPACE/$PREPARE_SH
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         
