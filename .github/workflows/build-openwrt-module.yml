@@ -55,7 +55,7 @@ jobs:
         sudo mkdir -p /workdir/upload
         sudo chown -R $USER:$GROUPS /workdir
 
-    - name: Clone source code
+    - name: fetch prebuild files
       working-directory: /workdir
       run: |
         df -hT $PWD
@@ -63,7 +63,12 @@ jobs:
         $GITHUB_WORKSPACE/$PREPARE_SH
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         
-    - name: Compile the firmware
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        
+    - name: Compile modules
       id: compile
       run: |
         cd openwrt
